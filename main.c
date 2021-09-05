@@ -1,4 +1,5 @@
 #define SERVER_PORT 56765
+#define BUFFER_SIZE 2048
 
 #include <stdio.h>
 #include <sys/socket.h>
@@ -11,7 +12,7 @@
 int main(void)
 {
 	int opt = 1;
-	char buf[2048];
+	char buf[BUFFER_SIZE];
 	struct sockaddr_in addr;
 
 	addr.sin_family = AF_INET;
