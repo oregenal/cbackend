@@ -32,7 +32,11 @@ int main(void)
 		int sockfd = Accept(ls, NULL, NULL);
 
 		ssize_t ssize = Read(sockfd, buf, 2048);
-		write(1, buf, ssize);
+		Write(1, buf, ssize);
+
+		Write(sockfd, "HTTP/1.1 200 OK\r\n\r\nHello!", 25);
+
+		Close(sockfd);
 	}
 
 	return 0;

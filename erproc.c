@@ -57,3 +57,20 @@ int Read(int fd, void *buf, size_t count) {
 	}
 	return res;
 }
+
+int Write(int fd, const void *buf, size_t count) {
+	int res = write(fd, buf, count);
+	if(res == -1) {
+		perror("write fail");
+		exit(EXIT_FAILURE);
+	}
+	return res;
+}
+
+void Close(int fd) {
+	int res = close(fd);
+	if(res == -1) {
+		perror("close fail");
+		exit(EXIT_FAILURE);
+	}
+}

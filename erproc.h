@@ -11,5 +11,7 @@ int Accept(int sockfd, struct sockaddr *restrict addr,
 void Setsockopt(int sockfd, int level, int optname, const void *optval,
 		socklen_t optlen);
 int Read(int fd, void *buf, size_t count);
+int Write(int fd, const void *buf, size_t count);
+void Close(int fd);
 
 #endif
