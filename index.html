@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang = "en">
+	<head>
+		<meta charset="UTF-8">
+	</head>
+	<body>
+		Client1
+		<button onclick="sendMsg()">Send Msg</button>
+	</body>
+			<script>
+				const socket = new WebSocket('ws://localhost:56765')
+
+				socket.addEventListener('open', event => console.log('Connected to WS Server!'))
+
+				socket.addEventListener('close', event => console.log('Disconnected from WS Setver!'))
+
+				socket.addEventListener('message', event => console.log('Message from Server: ', event.data))
+
+				const sendMsg = () => socket.send('Hello from Client!')
+			</script>
+</html>

@@ -7,7 +7,10 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <unistd.h>
+#include <string.h>
 #include "erproc.h"
+
+char *response = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n";
 
 int main(void)
 {
@@ -34,9 +37,9 @@ int main(void)
 		ssize_t ssize = Read(sockfd, buf, 2048);
 		Write(1, buf, ssize);
 
-		Write(sockfd, "HTTP/1.1 200 OK\r\n\r\nHello!", 25);
+		Write(sockfd, response, strlen(response));
 
-		Close(sockfd);
+		/* Close(sockfd); */
 	}
 
 	return 0;
