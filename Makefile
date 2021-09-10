@@ -1,2 +1,2 @@
 server:main.c erproc.c
-	gcc -Wall $^ -o server
+	gcc -Wall -ggdb $^ -o server
