@@ -21,8 +21,8 @@ void accept_key_generator(const char *request, char *response) {
 		}
 	}
 
-	write(1, mesarr, mesarrlen);
-	printf("\n");
+/*	write(1, mesarr, mesarrlen);
+	printf("\n"); */
 
 	res = SHA1Reset(&context);
 	if(res == -1) {
