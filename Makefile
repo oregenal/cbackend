@@ -19,7 +19,7 @@ $(BIN):$(OBJS)
 $(OBJ)/%.o:$(SRC)/%.c $(SRC)/%.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJ)/%.o:$(SRC)/%.c
+$(OBJ)/main.o:$(SRC)/main.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
