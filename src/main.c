@@ -48,7 +48,9 @@ int main(void)
 	Bind(ls, (struct sockaddr *) &addr, sizeof(addr));
 
 	Listen(ls, 16);
+#ifndef NDEBUG
 	printf("Server started on port %d.\n", SERVER_PORT);
+#endif
 
 	for(;;) {
 		int sockfd = Accept(ls, NULL, NULL);
@@ -78,21 +80,31 @@ int main(void)
 
 			uint8_t decode = buf[0];
 			if((decode & CLOSE_OPCODE) == CLOSE_OPCODE) {
+#ifndef NDEBUG
 				printf("Close connection.\n");
+#endif
 				exit(EXIT_SUCCESS);
 			};
 			if((decode & TEXT_OPCODE) != TEXT_OPCODE) {
+#ifndef NDEBUG
 				printf("Non text payload.\n");
+#endif
 				continue;
 			};
+#ifndef NDEBUG
 			if(decode && FIN_AND_MASK)
 				printf(" FIN is on. ");
+#endif
 
 			decode = buf[1];
+#ifndef NDEBUG
 			if(decode && FIN_AND_MASK)
 				printf("Masked is on. ");
+#endif
 			int payload_len = (PAYLOAD_LEN_MASK & decode);
+#ifndef NDEBUG
 			printf("Payload len: %d. ", payload_len);
+#endif
 
 			for(int i = 0; i < 4; ++i) {
 				payload_mask[i] = buf[i+2];
@@ -101,10 +113,12 @@ int main(void)
 			for(int i = 0; i < payload_len; ++i) {
 				message[i] = buf[i+6] ^ payload_mask[i % 4];
 			}
+#ifndef NDEBUG
 			Write(1, message, payload_len);
 			
 			printf(" Ssize: %ld.", ssize);
 			printf("\n");
+#endif
 
 			buf[0] = FIN_AND_MASK | 0x1;
 			buf[1] = PAYLOAD_LEN_MASK & payload_len;
