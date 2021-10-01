@@ -51,7 +51,7 @@ int main(void)
 
 		wait4(-1, &status, WNOHANG, NULL);
 
-		pid_t pid = fork();
+		int pid = fork();
 		if(pid) {
 			Close(sockfd);
 			continue;
@@ -72,7 +72,7 @@ int main(void)
 		Write(sockfd, "\r\n\r\n", 4);
 
 		for(;;) {
-			ssize_t ssize = Read(sockfd, buf, BUFFER_SIZE);
+			ssize = Read(sockfd, buf, BUFFER_SIZE);
 
 			uint8_t decode = buf[0];
 			if((decode & CLOSE_OPCODE) == CLOSE_OPCODE) {
