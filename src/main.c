@@ -18,13 +18,15 @@
 #include "erproc.h"
 #include "str_search_ptrn.h"
 #include "accept_key.h"
+#include "child_signal_handler.h"
 
 char *response = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ";
 char *socket_request = "Sec-WebSocket-Key:";
 
+
 int main(void)
 {
-	int opt = 1, status;
+	int opt = 1;
 	char buf[BUFFER_SIZE];
 	char request_key[REQUEST_KEY_SIZE];
 	char response_key[MESSAGE_SIZE];
@@ -37,6 +39,8 @@ int main(void)
 	addr.sin_port = htons(SERVER_PORT);
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	
+	signal(SIGCHLD, sig_handler);
+
 	int ls = Socket(AF_INET, SOCK_STREAM, 0);
 	
 	Setsockopt(ls, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -48,8 +52,6 @@ int main(void)
 
 	for(;;) {
 		int sockfd = Accept(ls, NULL, NULL);
-
-		wait4(-1, &status, WNOHANG, NULL);
 
 		int pid = fork();
 		if(pid) {
@@ -81,7 +83,6 @@ int main(void)
 			};
 			if((decode & TEXT_OPCODE) != TEXT_OPCODE) {
 				printf("Non text payload.\n");
-				Close(sockfd);
 				continue;
 			};
 			if(decode && FIN_AND_MASK)
