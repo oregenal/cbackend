@@ -120,7 +120,7 @@ int main(void)
 			printf("\n");
 #endif
 
-			buf[0] = FIN_AND_MASK | 0x1;
+			buf[0] = FIN_AND_MASK | TEXT_OPCODE;
 			buf[1] = PAYLOAD_LEN_MASK & payload_len;
 			for(int i = 0; i < payload_len; ++i)
 				buf[2+i] = message[i];
