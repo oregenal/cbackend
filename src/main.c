@@ -61,6 +61,8 @@ int main(void)
 			continue;
 		}
 
+		Close(ls);
+
 		ssize_t ssize = Read(sockfd, buf, BUFFER_SIZE);
 
 		int pos = str_search_ptrn(socket_request, buf, ssize);
