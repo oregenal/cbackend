@@ -1,10 +1,3 @@
-#define REQUEST_KEY_SIZE 24
-
-#define FIN_AND_MASK 0b10000000
-#define TEXT_OPCODE 0x1
-#define CLOSE_OPCODE 0x8
-#define PAYLOAD_LEN_MASK 0b01111111
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -23,7 +16,12 @@ char *socket_request = "Sec-WebSocket-Key:";
 
 enum {
 	SERVER_PORT = 56765,
-	BUFFER_SIZE = 2048
+	BUFFER_SIZE = 2048,
+	REQUEST_KEY_SIZE = 24,
+	FIN_AND_MASK = 0b10000000,
+	TEXT_OPCODE = 0x1,
+	CLOSE_OPCODE = 0x8,
+	PAYLOAD_LEN_MASK = 0b01111111,
 };
 
 int main(void)
