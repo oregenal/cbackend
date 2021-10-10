@@ -1,5 +1,3 @@
-#define SERVER_PORT 56765
-#define BUFFER_SIZE 2048
 #define REQUEST_KEY_SIZE 24
 
 #define FIN_AND_MASK 0b10000000
@@ -23,6 +21,10 @@
 char *response = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ";
 char *socket_request = "Sec-WebSocket-Key:";
 
+enum {
+	SERVER_PORT = 56765,
+	BUFFER_SIZE = 2048
+};
 
 int main(void)
 {
