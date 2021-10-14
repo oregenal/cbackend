@@ -37,7 +37,7 @@ int main(void)
 
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(SERVER_PORT);
-	addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	
 	signal(SIGCHLD, sig_handler);
 
