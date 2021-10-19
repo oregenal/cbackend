@@ -11,8 +11,8 @@
 #include "accept_key.h"
 #include "child_signal_handler.h"
 
-char *response = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ";
-char *socket_request = "Sec-WebSocket-Key:";
+const char *response = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ";
+const char *socket_request = "Sec-WebSocket-Key:";
 
 enum {
 	SERVER_PORT = 56765,
