@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -ggdb
+CFLAGS = -Wall -Wextra -pedantic -ggdb
 BIN = server
 SRC = src
 OBJ = obj
