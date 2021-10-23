@@ -14,6 +14,7 @@ release:clean
 release:$(BIN)
 
 $(BIN):$(OBJS)
+	@mkdir -p $(OBJ)
 	$(CC) $(CFLAGS) $^ -o $@
 
 $(OBJ)/%.o:$(SRC)/%.c $(SRC)/%.h
