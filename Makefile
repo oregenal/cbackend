@@ -13,11 +13,13 @@ release:CFLAGS=-Wall -O2 -DNDEBUG
 release:clean
 release:$(BIN)
 
+$(OBJ):
+	mkdir -p $@
+
 $(BIN):$(OBJS)
-	@mkdir -p $(OBJ)
 	$(CC) $(CFLAGS) $^ -o $@
 
-$(OBJ)/%.o:$(SRC)/%.c $(SRC)/%.h
+$(OBJ)/%.o:$(SRC)/%.c $(SRC)/%.h | $(OBJ)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ)/main.o:$(SRC)/main.c
