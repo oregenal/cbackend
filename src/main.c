@@ -19,10 +19,10 @@ enum {
 	SERVER_PORT = 56765,
 	BUFFER_SIZE = 2048,
 	REQUEST_KEY_SIZE = 24,
-	FIN_AND_MASK = 0b10000000,
+	FIN_AND_MASK = 0x80, /* 0b10000000 */
 	TEXT_OPCODE = 0x1,
 	CLOSE_OPCODE = 0x8,
-	PAYLOAD_LEN_MASK = 0b01111111,
+	PAYLOAD_LEN_MASK = 0x7f /* 0b01111111 */
 };
 
 int main(void)
@@ -54,7 +54,6 @@ int main(void)
 	int count = 0;
 
 	for(;;) {
-		int res;
 		fd_set readfds;
 		int max_d = ls;
 
@@ -65,9 +64,9 @@ int main(void)
 			FD_SET(fds[i], &readfds);
 			if(max_d < fds[i])
 				max_d = fds[i];
-		};
+		}
 
-		res = select(max_d + 1, &readfds, NULL, NULL, NULL);
+		int res = select(max_d + 1, &readfds, NULL, NULL, NULL);
 		
 		if(res == -1) {
 			if(errno == EINTR) {
@@ -84,27 +83,30 @@ int main(void)
 		if(FD_ISSET(ls, &readfds)) {
 			int sockfd = Accept(ls, NULL, NULL);
 
-			ssize_t ssize = Read(sockfd, buf, BUFFER_SIZE);
+			if(sockfd < FD_SETSIZE) {
+				ssize_t ssize = Read(sockfd, buf, BUFFER_SIZE);
 
-			int pos = str_search_ptrn(socket_request, buf, ssize);
+				int pos = str_search_ptrn(socket_request, buf, ssize);
 
-			for(int i = 0; i < REQUEST_KEY_SIZE; ++i)
-				request_key[i] = buf[pos+19+i];
+				for(int i = 0; i < REQUEST_KEY_SIZE; ++i)
+					request_key[i] = buf[pos+19+i];
 
-			accept_key_generator(request_key, response_key);
-			
-			Write(sockfd, response, response_len);
-			Write(sockfd, response_key, MESSAGE_SIZE);
-			Write(sockfd, "\r\n\r\n", 4);
+				accept_key_generator(request_key, response_key);
+				
+				Write(sockfd, response, response_len);
+				Write(sockfd, response_key, MESSAGE_SIZE);
+				Write(sockfd, "\r\n\r\n", 4);
 
-			fds[count] = sockfd;
-			++count;
+				fds[count] = sockfd;
+				++count;
+			} else {
+				Close(sockfd);
+			}
 
 		}
 
 		for(int i = 0; i < count; ++i) {
 			if(FD_ISSET(fds[i], &readfds)) {
-
 				ssize_t ssize = Read(fds[i], buf, BUFFER_SIZE);
 
 				uint8_t decode = buf[0];
@@ -114,20 +116,20 @@ int main(void)
 #endif
 					Close(fds[i]);
 
-					for(int r = i; r < count; ++r) {
-						fds[r] = fds[r+1];
+					for(int r = i; r < count - 1; ++r) {
+						fds[r] = fds[r + 1];
 					}
 					--count;
 					--i;
 					continue;
-				};
+				}
 
 				if((decode & TEXT_OPCODE) != TEXT_OPCODE) {
 #ifndef NDEBUG
 					printf("Non text payload.\n");
 #endif
 					continue;
-				};
+				}
 #ifndef NDEBUG
 				if(decode && FIN_AND_MASK)
 					printf(" FIN is on. ");
@@ -163,7 +165,7 @@ int main(void)
 				}
 			}
 		}
-	};
+	}
 
 	return 0;
 }
