@@ -6,10 +6,10 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <errno.h>
 #include "erproc.h"
 #include "str_search_ptrn.h"
 #include "accept_key.h"
-#include "child_signal_handler.h"
 
 const char *response = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ";
 const char *socket_request = "Sec-WebSocket-Key:";
@@ -34,13 +34,12 @@ int main(void)
 	int response_len = strlen(response);
 	char payload_mask[4];
 	char message[BUFFER_SIZE];
+	int fds[FD_SETSIZE];
 
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(SERVER_PORT);
 	addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	
-	signal(SIGCHLD, sig_handler);
-
 	int ls = Socket(AF_INET, SOCK_STREAM, 0);
 	
 	Setsockopt(ls, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -51,42 +50,77 @@ int main(void)
 #ifndef NDEBUG
 	printf("Server started on port %d.\n", SERVER_PORT);
 #endif
+	int count = 0;
 
 	for(;;) {
-		int sockfd = Accept(ls, NULL, NULL);
+		int res;
+		fd_set readfds;
+		int max_d = ls;
 
-		int pid = fork();
-		if(pid) {
-			Close(sockfd);
-			continue;
-		}
+		FD_ZERO(&readfds);
+		FD_SET(ls, &readfds);
 
-		Close(ls);
-
-		ssize_t ssize = Read(sockfd, buf, BUFFER_SIZE);
-
-		int pos = str_search_ptrn(socket_request, buf, ssize);
-
-		for(int i = 0; i < REQUEST_KEY_SIZE; ++i) {
-			request_key[i] = buf[pos+19+i];
+		for(int i = 0; i < count; ++i) {
+			FD_SET(fds[i], &readfds);
+			if(max_d < fds[i])
+				max_d = fds[i];
 		};
 
-		accept_key_generator(request_key, response_key);
+		res = select(max_d + 1, &readfds, NULL, NULL, NULL);
 		
-		Write(sockfd, response, response_len);
-		Write(sockfd, response_key, MESSAGE_SIZE);
-		Write(sockfd, "\r\n\r\n", 4);
+		if(res == -1) {
+			if(errno == EINTR) {
+				/* handle resived signal */
+			} else {
+				/* error handle */
+			}
+			continue; /* no point to check fds */
+		}
+		if(res == 0) {
+			/* handle case time-out */
+			continue; /* no point to check fds */
+		}
+		if(FD_ISSET(ls, &readfds)) {
+			int sockfd = Accept(ls, NULL, NULL);
 
-		for(;;) {
-			ssize = Read(sockfd, buf, BUFFER_SIZE);
+			ssize_t ssize = Read(sockfd, buf, BUFFER_SIZE);
+
+			int pos = str_search_ptrn(socket_request, buf, ssize);
+
+			for(int i = 0; i < REQUEST_KEY_SIZE; ++i)
+				request_key[i] = buf[pos+19+i];
+
+			accept_key_generator(request_key, response_key);
+			
+			Write(sockfd, response, response_len);
+			Write(sockfd, response_key, MESSAGE_SIZE);
+			Write(sockfd, "\r\n\r\n", 4);
+
+			fds[count] = sockfd;
+			++count;
+
+		}
+
+		for(int i = 0; i < count; ++i) {
+			if(FD_ISSET(fds[i], &readfds)) {
+
+			ssize_t ssize = Read(fds[i], buf, BUFFER_SIZE);
 
 			uint8_t decode = buf[0];
 			if((decode & CLOSE_OPCODE) == CLOSE_OPCODE) {
 #ifndef NDEBUG
 				printf("Close connection.\n");
 #endif
-				exit(EXIT_SUCCESS);
+				Close(fds[i]);
+
+				for(int r = i; r < count; ++r) {
+					fds[r] = fds[r+1];
+				}
+				--count;
+				--i;
+				continue;
 			};
+
 			if((decode & TEXT_OPCODE) != TEXT_OPCODE) {
 #ifndef NDEBUG
 				printf("Non text payload.\n");
@@ -108,26 +142,25 @@ int main(void)
 			printf("Payload len: %d. ", payload_len);
 #endif
 
-			for(int i = 0; i < 4; ++i) {
+			for(int i = 0; i < 4; ++i)
 				payload_mask[i] = buf[i+2];
-			}
 			
-			for(int i = 0; i < payload_len; ++i) {
+			for(int i = 0; i < payload_len; ++i)
 				message[i] = buf[i+6] ^ payload_mask[i % 4];
-			}
 #ifndef NDEBUG
 			Write(1, message, payload_len);
 			
 			printf(" Ssize: %ld.", ssize);
 			printf("\n");
 #endif
-
 			buf[0] = FIN_AND_MASK | TEXT_OPCODE;
 			buf[1] = PAYLOAD_LEN_MASK & payload_len;
 			for(int i = 0; i < payload_len; ++i)
 				buf[2+i] = message[i];
-			Write(sockfd, buf, payload_len+2);
-		};
+			Write(fds[i], buf, payload_len+2);
+
+			}
+		}
 	};
 
 	return 0;
