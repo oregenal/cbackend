@@ -104,61 +104,62 @@ int main(void)
 		for(int i = 0; i < count; ++i) {
 			if(FD_ISSET(fds[i], &readfds)) {
 
-			ssize_t ssize = Read(fds[i], buf, BUFFER_SIZE);
+				ssize_t ssize = Read(fds[i], buf, BUFFER_SIZE);
 
-			uint8_t decode = buf[0];
-			if((decode & CLOSE_OPCODE) == CLOSE_OPCODE) {
+				uint8_t decode = buf[0];
+				if((decode & CLOSE_OPCODE) == CLOSE_OPCODE) {
 #ifndef NDEBUG
-				printf("Close connection.\n");
+					printf("Close connection.\n");
 #endif
-				Close(fds[i]);
+					Close(fds[i]);
 
-				for(int r = i; r < count; ++r) {
-					fds[r] = fds[r+1];
+					for(int r = i; r < count; ++r) {
+						fds[r] = fds[r+1];
+					}
+					--count;
+					--i;
+					continue;
+				};
+
+				if((decode & TEXT_OPCODE) != TEXT_OPCODE) {
+#ifndef NDEBUG
+					printf("Non text payload.\n");
+#endif
+					continue;
+				};
+#ifndef NDEBUG
+				if(decode && FIN_AND_MASK)
+					printf(" FIN is on. ");
+#endif
+
+				decode = buf[1];
+#ifndef NDEBUG
+				if(decode && FIN_AND_MASK)
+					printf("Masked is on. ");
+#endif
+				int payload_len = (PAYLOAD_LEN_MASK & decode);
+#ifndef NDEBUG
+				printf("Payload len: %d. ", payload_len);
+#endif
+
+				for(int i = 0; i < 4; ++i)
+					payload_mask[i] = buf[i+2];
+				
+				for(int i = 0; i < payload_len; ++i)
+					message[i] = buf[i+6] ^ payload_mask[i % 4];
+#ifndef NDEBUG
+				Write(1, message, payload_len);
+				
+				printf(" Ssize: %ld.", ssize);
+				printf("\n");
+#endif
+				buf[0] = FIN_AND_MASK | TEXT_OPCODE;
+				buf[1] = PAYLOAD_LEN_MASK & payload_len;
+				for(int i = 0; i < payload_len; ++i)
+					buf[2+i] = message[i];
+				for(int i = 0; i < count; ++i) {
+					Write(fds[i], buf, payload_len+2);
 				}
-				--count;
-				--i;
-				continue;
-			};
-
-			if((decode & TEXT_OPCODE) != TEXT_OPCODE) {
-#ifndef NDEBUG
-				printf("Non text payload.\n");
-#endif
-				continue;
-			};
-#ifndef NDEBUG
-			if(decode && FIN_AND_MASK)
-				printf(" FIN is on. ");
-#endif
-
-			decode = buf[1];
-#ifndef NDEBUG
-			if(decode && FIN_AND_MASK)
-				printf("Masked is on. ");
-#endif
-			int payload_len = (PAYLOAD_LEN_MASK & decode);
-#ifndef NDEBUG
-			printf("Payload len: %d. ", payload_len);
-#endif
-
-			for(int i = 0; i < 4; ++i)
-				payload_mask[i] = buf[i+2];
-			
-			for(int i = 0; i < payload_len; ++i)
-				message[i] = buf[i+6] ^ payload_mask[i % 4];
-#ifndef NDEBUG
-			Write(1, message, payload_len);
-			
-			printf(" Ssize: %ld.", ssize);
-			printf("\n");
-#endif
-			buf[0] = FIN_AND_MASK | TEXT_OPCODE;
-			buf[1] = PAYLOAD_LEN_MASK & payload_len;
-			for(int i = 0; i < payload_len; ++i)
-				buf[2+i] = message[i];
-			Write(fds[i], buf, payload_len+2);
-
 			}
 		}
 	};
