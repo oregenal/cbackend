@@ -162,9 +162,9 @@ int main(void)
 				if(decode && FIN_AND_MASK)
 					printf("Masked is on. ");
 #endif
-				int highscore_len = (PAYLOAD_LEN_MASK & decode);
+				highscore_len = (PAYLOAD_LEN_MASK & decode);
 #ifndef NDEBUG
-				printf("Payload len: %d. ", highscore_len);
+				printf("Payload len: %zu. ", highscore_len);
 #endif
 
 				for(int i = 0; i < 4; ++i)
