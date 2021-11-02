@@ -178,6 +178,7 @@ int main(void)
 				printf(" Ssize: %ld.", ssize);
 				printf("\n");
 #endif
+				ftruncate(highscore_file, 0);
 				lseek(highscore_file, 0, SEEK_SET);
 				Write(highscore_file, highscore, highscore_len);
 
