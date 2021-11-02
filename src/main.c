@@ -107,7 +107,13 @@ int main(void)
 
 		for(int i = 0; i < count; ++i) {
 			if(FD_ISSET(fds[i], &readfds)) {
+#ifndef NDEBUG
 				ssize_t ssize = Read(fds[i], buf, BUFFER_SIZE);
+#endif
+
+#ifdef NDEBUG
+				Read(fds[i], buf, BUFFER_SIZE);
+#endif
 
 				uint8_t decode = buf[0];
 				if((decode & CLOSE_OPCODE) == CLOSE_OPCODE) {

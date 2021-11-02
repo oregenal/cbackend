@@ -9,7 +9,7 @@ OBJS=$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
 
 all:$(BIN)
 
-release:CFLAGS=-Wall -O2 -DNDEBUG
+release:CFLAGS=-std=c11 -O2 -DNDEBUG
 release:clean
 release:$(BIN)
 
