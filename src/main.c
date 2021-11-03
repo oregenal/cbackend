@@ -177,6 +177,8 @@ int main(void)
 #ifndef NDEBUG
 				printf("Payload len: %zu. ", highscore.len);
 #endif
+				if(highscore.len > 125)
+					continue;
 
 				for(int i = 0; i < 4; ++i)
 					payload_mask[i] = buf[i+2];
