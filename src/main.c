@@ -160,14 +160,18 @@ int main(void)
 					continue;
 				}
 #ifndef NDEBUG
-				if(decode && FIN_AND_MASK)
-					printf(" FIN is on. ");
+				if(!(decode && FIN_AND_MASK)) {
+					printf(" FIN is off. ");
+					continue;
+				}
 #endif
 
 				decode = buf[1];
 #ifndef NDEBUG
-				if(decode && FIN_AND_MASK)
-					printf("Masked is on. ");
+				if(!(decode && FIN_AND_MASK)) {
+					printf("Masked is off. ");
+					continue;
+				}
 #endif
 				highscore.len = (PAYLOAD_LEN_MASK & decode);
 #ifndef NDEBUG
