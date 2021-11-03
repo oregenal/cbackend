@@ -26,6 +26,8 @@ typedef struct {
 } mes_cont;
 
 void ws_message(mes_cont *message, char *buf);
+int str_to_int(mes_cont *str);
+void copy_mes_cont(mes_cont *dest, mes_cont *src);
 
 enum {
 	SERVER_PORT = 56765,
@@ -39,7 +41,7 @@ enum {
 
 int main(void)
 {
-	mes_cont highscore;
+	mes_cont highscore, payload;
 	int opt = 1;
 	char buf[BUFFER_SIZE];
 	char request_key[REQUEST_KEY_SIZE];
@@ -173,18 +175,28 @@ int main(void)
 					continue;
 				}
 #endif
-				highscore.len = (PAYLOAD_LEN_MASK & decode);
+				payload.len = (PAYLOAD_LEN_MASK & decode);
 #ifndef NDEBUG
-				printf("Payload len: %zu. ", highscore.len);
+				printf("Payload len: %zu. ", payload.len);
 #endif
-				if(highscore.len > 125)
+				if(payload.len > 125)
 					continue;
 
 				for(int i = 0; i < 4; ++i)
 					payload_mask[i] = buf[i+2];
 				
-				for(int i = 0; i < highscore.len; ++i)
-					highscore.score[i] = buf[i+6] ^ payload_mask[i % 4];
+				for(int i = 0; i < payload.len; ++i)
+					payload.score[i] = buf[i+6] ^ payload_mask[i % 4];
+
+				if(str_to_int(&payload) == -1 ||
+					str_to_int(&payload) <= str_to_int(&highscore)) {
+#ifndef NDEBUG
+					printf("HighScore doesn't match.\n");
+#endif
+					continue;
+				}
+
+				copy_mes_cont(&highscore, &payload);
 #ifndef NDEBUG
 				Write(1, &highscore.score, highscore.len);
 				
@@ -210,6 +222,26 @@ void ws_message(mes_cont *message, char *buf)
 {
 		buf[0] = FIN_AND_MASK | TEXT_OPCODE;
 		buf[1] = PAYLOAD_LEN_MASK & message->len;
+
 		for(int i = 0; i < message->len; ++i)
 			buf[2+i] = message->score[i];
+}
+
+int str_to_int(mes_cont *str)
+{
+	int res = 0;
+	for(int i = 0; i <str->len; ++i) {
+		if(str->score[i] < '0' || str->score[i] > '9')
+			return -1;
+
+		res = str->score[i] - '0' + res * 10;
+	}
+	return res;
+}
+
+void copy_mes_cont(mes_cont *dest, mes_cont *src)
+{
+	for(int i = 0; i < src->len; ++i) {
+		dest->score[i] = src->score[i];
+	}
 }
