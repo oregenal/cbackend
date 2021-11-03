@@ -1,3 +1,4 @@
+#define _XOPEN_SOURCE 500
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -19,6 +20,13 @@
 const char *response = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ";
 const char *socket_request = "Sec-WebSocket-Key:";
 
+typedef struct {
+	char score[HIGHSCORE_BUFFER_SIZE];
+	ssize_t len;
+} mes_cont;
+
+void ws_message(mes_cont *message, char *buf);
+
 enum {
 	SERVER_PORT = 56765,
 	BUFFER_SIZE = 2048,
@@ -31,6 +39,7 @@ enum {
 
 int main(void)
 {
+	mes_cont highscore;
 	int opt = 1;
 	char buf[BUFFER_SIZE];
 	char request_key[REQUEST_KEY_SIZE];
@@ -38,7 +47,6 @@ int main(void)
 	struct sockaddr_in addr;
 	int response_len = strlen(response);
 	char payload_mask[4];
-	char highscore[HIGHSCORE_BUFFER_SIZE];
 	int fds[FD_SETSIZE];
 
 	addr.sin_family = AF_INET;
@@ -46,10 +54,11 @@ int main(void)
 	addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
 	int highscore_file = open(HIGHSCORE_FILE, O_RDWR|O_CREAT, 0666);
-	ssize_t highscore_len = read(highscore_file, highscore, HIGHSCORE_BUFFER_SIZE);
+	highscore.len = read(highscore_file, &highscore.score,
+							HIGHSCORE_BUFFER_SIZE);
 #ifndef NDEBUG
-	printf("Readed from file: %ld.\n", highscore_len);
-	printf("HighScore: %s.\n", highscore);
+	printf("Readed from file: %ld.\n", highscore.len);
+	printf("HighScore: %s.\n", (char *)&highscore.score);
 #endif
 	int ls = Socket(AF_INET, SOCK_STREAM, 0);
 	
@@ -107,11 +116,9 @@ int main(void)
 				Write(sockfd, response_key, MESSAGE_SIZE);
 				Write(sockfd, "\r\n\r\n", 4);
 
-				buf[0] = FIN_AND_MASK | TEXT_OPCODE;
-				buf[1] = PAYLOAD_LEN_MASK & highscore_len;
-				for(int i = 0; i < highscore_len; ++i)
-					buf[2+i] = highscore[i];
-				Write(sockfd, buf, highscore_len + 2);
+				ws_message(&highscore, buf);
+
+				Write(sockfd, buf, highscore.len + 2);
 
 				fds[count] = sockfd;
 				++count;
@@ -162,36 +169,41 @@ int main(void)
 				if(decode && FIN_AND_MASK)
 					printf("Masked is on. ");
 #endif
-				highscore_len = (PAYLOAD_LEN_MASK & decode);
+				highscore.len = (PAYLOAD_LEN_MASK & decode);
 #ifndef NDEBUG
-				printf("Payload len: %zu. ", highscore_len);
+				printf("Payload len: %zu. ", highscore.len);
 #endif
 
 				for(int i = 0; i < 4; ++i)
 					payload_mask[i] = buf[i+2];
 				
-				for(int i = 0; i < highscore_len; ++i)
-					highscore[i] = buf[i+6] ^ payload_mask[i % 4];
+				for(int i = 0; i < highscore.len; ++i)
+					highscore.score[i] = buf[i+6] ^ payload_mask[i % 4];
 #ifndef NDEBUG
-				Write(1, highscore, highscore_len);
+				Write(1, &highscore.score, highscore.len);
 				
 				printf(" Ssize: %ld.", ssize);
 				printf("\n");
 #endif
 				ftruncate(highscore_file, 0);
 				lseek(highscore_file, 0, SEEK_SET);
-				Write(highscore_file, highscore, highscore_len);
+				Write(highscore_file, &highscore.score, highscore.len);
 
-				buf[0] = FIN_AND_MASK | TEXT_OPCODE;
-				buf[1] = PAYLOAD_LEN_MASK & highscore_len;
-				for(int i = 0; i < highscore_len; ++i)
-					buf[2+i] = highscore[i];
+				ws_message(&highscore, buf);
 				for(int i = 0; i < count; ++i) {
-					Write(fds[i], buf, highscore_len+2);
+					Write(fds[i], buf, highscore.len+2);
 				}
 			}
 		}
 	}
 
 	return 0;
+}
+
+void ws_message(mes_cont *message, char *buf)
+{
+		buf[0] = FIN_AND_MASK | TEXT_OPCODE;
+		buf[1] = PAYLOAD_LEN_MASK & message->len;
+		for(int i = 0; i < message->len; ++i)
+			buf[2+i] = message->score[i];
 }
