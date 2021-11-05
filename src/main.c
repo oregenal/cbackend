@@ -29,15 +29,14 @@ void ws_message(mes_cont *message, char *buf);
 int str_to_int(mes_cont *str);
 void copy_mes_cont(mes_cont *dest, mes_cont *src);
 
-enum {
-	SERVER_PORT = 56765,
-	BUFFER_SIZE = 2048,
-	REQUEST_KEY_SIZE = 24,
-	FIN_AND_MASK = 0x80, /* 0b10000000 */
-	TEXT_OPCODE = 0x1,
-	CLOSE_OPCODE = 0x8,
-	PAYLOAD_LEN_MASK = 0x7f /* 0b01111111 */
-};
+#define SERVER_PORT 56765
+#define BUFFER_SIZE 2048
+#define REQUEST_KEY_SIZE 24
+
+const unsigned char FIN_AND_MASK = 0x80; /* 0b10000000 */
+#define TEXT_OPCODE 0x1
+#define CLOSE_OPCODE 0x8
+#define PAYLOAD_LEN_MASK 0x7f /* 0b01111111 */
 
 int main(void)
 {
