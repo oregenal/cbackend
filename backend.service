@@ -8,6 +8,7 @@ Type=simple
 Restart=always
 RestartSec=1
 User=oregenal
+WorkingDirectory=/home/oregenal/socketserver
 ExecStart=/home/oregenal/socketserver/server
 
 [Install]
