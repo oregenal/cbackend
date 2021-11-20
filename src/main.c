@@ -176,7 +176,7 @@ int main(void)
 #endif
 				payload.len = (PAYLOAD_LEN_MASK & decode);
 #ifndef NDEBUG
-				printf("Payload len: %zu. ", payload.len);
+				printf(" Payload len: %zu. ", payload.len);
 #endif
 				if(payload.len > 125)
 					continue;
@@ -229,7 +229,7 @@ void ws_message(mes_cont *message, char *buf)
 int str_to_int(mes_cont *str)
 {
 	int res = 0;
-	for(int i = 0; i <str->len; ++i) {
+	for(int i = 0; i < str->len; ++i) {
 		if(str->score[i] < '0' || str->score[i] > '9')
 			return -1;
 
@@ -243,4 +243,5 @@ void copy_mes_cont(mes_cont *dest, mes_cont *src)
 	for(int i = 0; i < src->len; ++i) {
 		dest->score[i] = src->score[i];
 	}
+	dest->len = src->len;
 }
