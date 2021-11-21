@@ -3,13 +3,10 @@ Description=Websocket testing server
 After=network.target
 StartLimitIntervalSec=0
 
+[Install]
+WantedBy=multi-user.target
+
 [Service]
 Type=simple
 Restart=always
 RestartSec=1
-User=oregenal
-WorkingDirectory=/home/oregenal/socketserver
-ExecStart=/home/oregenal/socketserver/server
-
-[Install]
-WantedBy=multi-user.target
