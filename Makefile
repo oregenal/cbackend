@@ -7,7 +7,7 @@ OBJ = obj
 SRCS=$(wildcard $(SRC)/*.c)
 OBJS=$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
 
-.PHONY:install clean
+.PHONY:install clean all
 
 all:$(BIN)
 
