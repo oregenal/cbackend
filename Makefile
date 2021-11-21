@@ -31,7 +31,7 @@ install:
 	cp backend.service /etc/systemd/system/backend.service
 	@echo "User=`stat -c '%U' .`" >> /etc/systemd/system/backend.service
 	@echo "WorkingDirectory=`pwd`" >> /etc/systemd/system/backend.service
-	@echo "ExecStart=`pwd`" >> /etc/systemd/system/backend.service
+	@echo "ExecStart=`pwd`/$(BIN)" >> /etc/systemd/system/backend.service
 
 clean:
 	rm -f $(OBJ)/* $(BIN)
