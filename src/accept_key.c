@@ -1,17 +1,16 @@
 #include "accept_key.h"
-#include "sha1.h"
 #include "base64.h"
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <openssl/evp.h>
 
 void accept_key_generator(const char *request, char *response) {
-	int res;
 	char *guid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 	int mesarrlen = (24 + strlen(guid));
 	char mesarr[mesarrlen];
-	unsigned char mesdig[SHA1HashSize];
-	SHA1Context context;
+	unsigned char mesdig[EVP_MAX_MD_SIZE];
+	unsigned int mesidg_len = sizeof(mesdig);
 
 	for(int i = 0; i < mesarrlen; ++i) {
 		if(i < 24) {
@@ -21,20 +20,14 @@ void accept_key_generator(const char *request, char *response) {
 		}
 	}
 
-/*	write(1, mesarr, mesarrlen);
-	printf("\n"); */
+	EVP_MD_CTX *ctx;
 
-	res = SHA1Reset(&context);
-	if(res == -1) {
-		printf("SHA1Reset fail\n");
-	}
+	ctx = EVP_MD_CTX_new();
+	EVP_DigestInit_ex(ctx, EVP_sha1(), NULL);
+	EVP_DigestUpdate(ctx, mesarr, mesarrlen);
+	EVP_DigestFinal_ex(ctx, mesdig, &mesidg_len);
 
-	res = SHA1Input(&context, (unsigned char *)mesarr, mesarrlen);
+	base64_encode((char *)mesdig, mesidg_len, response, MESSAGE_SIZE);
 
-	res = SHA1Result(&context, mesdig);
-	if(res) {
-		printf("Result fail\n");
-	}
-
-	base64_encode((char *)mesdig, SHA1HashSize, response, MESSAGE_SIZE);
+	EVP_MD_CTX_free(ctx);
 }

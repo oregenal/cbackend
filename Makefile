@@ -3,6 +3,7 @@ CFLAGS = -Wall -Wextra -std=c11 -pedantic -ggdb
 BIN = server
 SRC = src
 OBJ = obj
+LIBS = -lcrypto
 
 SRCS=$(wildcard $(SRC)/*.c)
 OBJS=$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
@@ -19,7 +20,7 @@ $(OBJ):
 	mkdir -p $@
 
 $(BIN):$(OBJS)
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 
 $(OBJ)/%.o:$(SRC)/%.c $(SRC)/%.h | $(OBJ)
 	$(CC) $(CFLAGS) -c $< -o $@
