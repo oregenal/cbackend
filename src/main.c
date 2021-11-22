@@ -107,6 +107,13 @@ int main(void)
 				ssize_t ssize = Read(sockfd, buf, BUFFER_SIZE);
 
 				int pos = str_search_ptrn(socket_request, buf, ssize);
+				if(pos < 0) {
+#ifndef NDEBUG
+					printf("Non WebSocket connection, Close.\n");
+#endif
+					Close(sockfd);
+					continue;
+				}
 
 				for(int i = 0; i < REQUEST_KEY_SIZE; ++i)
 					request_key[i] = buf[pos+19+i];
