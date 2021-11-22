@@ -1,3 +1,4 @@
+#include "str_search_ptrn.h"
 
 static int equal(int i, int j, const char *pattern, const char *str) {
 	int f = 0;
