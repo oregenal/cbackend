@@ -33,7 +33,7 @@ void copy_mes_cont(mes_cont *dest, mes_cont *src);
 #define BUFFER_SIZE 2048
 #define REQUEST_KEY_SIZE 24
 
-const unsigned char FIN_AND_MASK = 0x80; /* 0b10000000 */
+#define FIN_AND_MASK (char)0x80 /* 0b10000000 */
 #define TEXT_OPCODE 0x1
 #define CLOSE_OPCODE 0x8
 #define PAYLOAD_LEN_MASK 0x7f /* 0b01111111 */
@@ -107,29 +107,28 @@ int main(void)
 				ssize_t ssize = Read(sockfd, buf, BUFFER_SIZE);
 
 				int pos = str_search_ptrn(socket_request, buf, ssize);
-				if(pos < 0) {
+				if(pos >= 0) {
+					for(int i = 0; i < REQUEST_KEY_SIZE; ++i)
+						request_key[i] = buf[pos+19+i];
+
+					accept_key_generator(request_key, response_key);
+					
+					Write(sockfd, response, response_len);
+					Write(sockfd, response_key, MESSAGE_SIZE);
+					Write(sockfd, "\r\n\r\n", 4);
+
+					ws_message(&highscore, buf);
+
+					Write(sockfd, buf, highscore.len + 2);
+
+					fds[count] = sockfd;
+					++count;
+				} else {
 #ifndef NDEBUG
-					printf("Non WebSocket connection, Close.\n");
+					printf("Non WebSocket connection. Close.\n");
 #endif
 					Close(sockfd);
-					continue;
 				}
-
-				for(int i = 0; i < REQUEST_KEY_SIZE; ++i)
-					request_key[i] = buf[pos+19+i];
-
-				accept_key_generator(request_key, response_key);
-				
-				Write(sockfd, response, response_len);
-				Write(sockfd, response_key, MESSAGE_SIZE);
-				Write(sockfd, "\r\n\r\n", 4);
-
-				ws_message(&highscore, buf);
-
-				Write(sockfd, buf, highscore.len + 2);
-
-				fds[count] = sockfd;
-				++count;
 			} else {
 				Close(sockfd);
 			}
