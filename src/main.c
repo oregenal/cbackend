@@ -32,6 +32,7 @@ void copy_mes_cont(mes_cont *dest, mes_cont *src);
 #define SERVER_PORT 56765
 #define BUFFER_SIZE 2048
 #define REQUEST_KEY_SIZE 24
+#define BACKLOG 16
 
 #define FIN_AND_MASK (char)0x80 /* 0b10000000 */
 #define TEXT_OPCODE 0x1
@@ -67,7 +68,7 @@ int main(void)
 
 	Bind(ls, (struct sockaddr *) &addr, sizeof(addr));
 
-	Listen(ls, 16);
+	Listen(ls, BACKLOG);
 #ifndef NDEBUG
 	printf("Server started on port %d.\n", SERVER_PORT);
 #endif
