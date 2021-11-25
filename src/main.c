@@ -17,7 +17,9 @@
 #define HIGHSCORE_FILE "highscore"
 #define HIGHSCORE_BUFFER_SIZE 1024
 
-const char *response = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ";
+const char *response = "HTTP/1.1 101 Switching Protocols\r\n"
+					"Upgrade: websocket\r\n"
+					"Connection: Upgrade\r\nSec-WebSocket-Accept: ";
 const char *socket_request = "Sec-WebSocket-Key:";
 
 typedef struct {
