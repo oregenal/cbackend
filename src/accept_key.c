@@ -6,7 +6,7 @@
 #include <openssl/evp.h>
 
 void accept_key_generator(const char *request, char *response) {
-	char *guid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+	static const char *guid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 	int mesarrlen = (24 + strlen(guid));
 	char mesarr[mesarrlen];
 	unsigned char mesdig[EVP_MAX_MD_SIZE];
