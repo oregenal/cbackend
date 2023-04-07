@@ -1,0 +1,22 @@
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.field {
+	background-color: darkblue;
+	position: relative;
+}
+
+.snake {
+	background-color: greenyellow;
+	position: absolute;
+	border-radius: 10%;
+}
