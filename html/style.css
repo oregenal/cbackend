@@ -2,6 +2,8 @@
 	margin: 0;
 	padding: 0;
 	box-sizing: border-box;
+	background: #191919;
+    color: lightslategrey;
 }
 
 body {
